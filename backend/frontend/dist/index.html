@@ -33,10 +33,10 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
   <section class="card">
     <form id="event-form" onsubmit="return submitForm(event)">
       <input id="name" required placeholder="事件名称" />
-      <input id="cron_expr" required placeholder="cron 表达式，如 0 8,20 * * *" />
-      <textarea id="message" required rows="3" placeholder="推送内容"></textarea>
+      <input id="message" required rows="3" placeholder="推送内容" />
       <input id="chat_id" required placeholder="TG chat_id，如 -1001234567890" />
       <input id="tg_token" required placeholder="TG BOT_TOKEN" />
+      <input id="trigger_days" type="number" min="0" placeholder="自定义天数" />
       <button type="submit">保存</button>
       <button type="button" class="secondary" onclick="document.getElementById('event-form').reset()">重置</button>
     </form>
@@ -44,7 +44,7 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
   <section class="card" style="margin-top:16px">
     <h3>事件列表</h3>
     <table>
-      <thead><tr><th>#</th><th>名称</th><th>Cron</th><th>消息</th><th>ChatID</th><th>状态</th><th>操作</th></tr></thead>
+      <thead><tr><th>#</th><th>名称</th><th>消息</th><th>ChatID</th><th>自定义天数</th><th>下次</th><th>状态</th><th>操作</th></tr></thead>
       <tbody id="list"></tbody>
     </table>
   </section>
@@ -52,7 +52,7 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
 <script>
 async function load(){
   const res = await fetch('/api/events'); const rows = await res.json();
-  document.getElementById('list').innerHTML = rows.map(r=>`<tr><td>${r.id}</td><td>${r.name}</td><td><code>${r.cron_expr}</code></td><td>${r.message.slice(0,24)}…</td><td>${r.chat_id}</td><td><span class="${r.enabled?'go':'stop'}">${r.enabled?'启用':'停用'}</span></td><td><button onclick="del(${r.id})">删除</button></td></tr>`).join('');
+  document.getElementById('list').innerHTML = rows.map(r=>`<tr><td>${r.id}</td><td>${r.name}</td><td>${r.message.slice(0,24)}…</td><td>${r.chat_id}</td><td>${r.trigger_days}天</td><td>${r.next_run ? new Date(r.next_run).toLocaleString() : '-'}</td><td><span class="${r.enabled?'go':'stop'}">${r.enabled?'启用':'停用'}</span></td><td><button onclick="del(${r.id})">删除</button></td></tr>`).join('');
 }
 async function submitForm(e){e.preventDefault();const body=Object.fromEntries(new FormData(document.getElementById('event-form')).entries());const res=await fetch('/api/events',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});if(res.ok){document.getElementById('event-form').reset();load();}else{alert('保存失败');}return false;}
 async function del(id){if(!confirm('确定删除？'))return;await fetch('/api/events/'+id,{method:'DELETE'});load();}

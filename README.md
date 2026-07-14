@@ -4,7 +4,7 @@
 
 ## 功能
 
-- 📅 支持 cron 表达式，精确到秒
+- 📅 支持自定义天数自动通知，无需 cron
 - 🎯 多事件/多 chat_id 隔离
 - 🖥️ Komari 风格前端界面
 - 🐘 SQLite 本地持久化
@@ -34,6 +34,7 @@ docker-compose up --build
 - 推送内容
 - TG chat_id
 - TG bot token
+- `trigger_days`：首次发送前延后 N 天；首次发送后仍按 cron + N 天继续延迟触发
 
 ## 技术栈
 

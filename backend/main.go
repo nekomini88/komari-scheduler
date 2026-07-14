@@ -7,31 +7,28 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type Event struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	CronExpr  string    `json:"cron_expr"`
-	Message   string    `json:"message"`
-	ChatID    string    `json:"chat_id"`
-	TGToken   string    `json:"tg_token"`
-	Enabled   bool      `json:"enabled"`
-	NextRun   time.Time `json:"next_run"`
-	CreatedAt time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Message     string    `json:"message"`
+	ChatID      string    `json:"chat_id"`
+	TGToken     string    `json:"tg_token"`
+	Enabled     bool      `json:"enabled"`
+	NextRun     time.Time `json:"next_run"`
+	TriggerDays int64     `json:"trigger_days"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 var db *sql.DB
-var c *cron.Cron
 
 func mustDB() *sql.DB {
-	d, err := sql.Open("sqlite3", "./scheduler.db")
+	d, err := sql.Open("sqlite3", "/app/data/scheduler.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,16 +36,19 @@ func mustDB() *sql.DB {
 	if _, err := d.Exec(`CREATE TABLE IF NOT EXISTS events (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
-		cron_expr TEXT NOT NULL,
 		message TEXT NOT NULL,
 		chat_id TEXT NOT NULL,
 		tg_token TEXT NOT NULL,
 		enabled INTEGER NOT NULL DEFAULT 1,
+		trigger_days INTEGER NOT NULL DEFAULT 0,
+		first_triggered DATETIME,
 		next_run DATETIME,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	)`); err != nil {
 		log.Fatal(err)
 	}
+	_, _ = d.Exec(`ALTER TABLE events ADD COLUMN trigger_days INTEGER NOT NULL DEFAULT 0`)
+	_, _ = d.Exec(`ALTER TABLE events ADD COLUMN first_triggered DATETIME`)
 	return d
 }
 
@@ -59,12 +59,8 @@ func b2i(b bool) int64 {
 	return 0
 }
 
-func i2b(i int64) bool {
-	return i != 0
-}
-
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query(`SELECT id,name,cron_expr,message,chat_id,tg_token,enabled,COALESCE(next_run,''),created_at FROM events ORDER BY id DESC`)
+	rows, err := db.Query(`SELECT id,name,message,chat_id,tg_token,enabled,COALESCE(next_run,''),trigger_days,COALESCE(first_triggered,''),created_at FROM events ORDER BY id DESC`)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -73,8 +69,8 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	var out []Event
 	for rows.Next() {
 		var e Event
-		var nextRunStr string
-		if err := rows.Scan(&e.ID, &e.Name, &e.CronExpr, &e.Message, &e.ChatID, &e.TGToken, &e.Enabled, &nextRunStr, &e.CreatedAt); err != nil {
+		var nextRunStr, firstTriggeredStr string
+		if err := rows.Scan(&e.ID, &e.Name, &e.Message, &e.ChatID, &e.TGToken, &e.Enabled, &nextRunStr, &e.TriggerDays, &firstTriggeredStr, &e.CreatedAt); err != nil {
 			continue
 		}
 		if nextRunStr != "" {
@@ -94,14 +90,20 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	res, err := db.Exec(`INSERT INTO events(name,cron_expr,message,chat_id,tg_token,enabled) VALUES(?,?,?,?,?,?)`,
-		e.Name, e.CronExpr, e.Message, e.ChatID, e.TGToken, b2i(e.Enabled))
+	if e.TriggerDays < 0 {
+		e.TriggerDays = 0
+	}
+	res, err := db.Exec(`INSERT INTO events(name,message,chat_id,tg_token,enabled,trigger_days) VALUES(?,?,?,?,?,?)`,
+		e.Name, e.Message, e.ChatID, e.TGToken, b2i(e.Enabled), e.TriggerDays)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 	e.ID, _ = res.LastInsertId()
-	_ = addJobToCron(e.ID, e.CronExpr, e.Message, e.ChatID, e.TGToken, e.Enabled)
+	if e.TriggerDays > 0 && e.Enabled {
+		next := time.Now().UTC().Add(time.Duration(e.TriggerDays) * 24 * time.Hour)
+		_, _ = db.Exec(`UPDATE events SET next_run = ? WHERE id = ?`, next, e.ID)
+	}
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(e)
@@ -114,11 +116,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing id", 400)
 		return
 	}
-	_, _ = db.Exec(`DELETE FROM events WHERE id = ?`, idStr)
-	if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
-		c.Remove(cron.EntryID(id))
-		_, _ = db.Exec(`UPDATE events SET next_run = NULL WHERE id = ?`, id)
-	}
+	_, _ = db.Exec(`UPDATE events SET enabled=0, next_run=NULL WHERE id = ?`, idStr)
 	w.WriteHeader(204)
 }
 
@@ -137,39 +135,35 @@ func sendTG(token, chatID, text string) {
 	log.Println("TG sent:", chatID)
 }
 
-func addJobToCron(id int64, cronExpr, message, chatID, token string, enabled bool) error {
-	entryID := cron.EntryID(id)
-	c.Remove(entryID)
-	if !enabled {
-		_, _ = db.Exec(`UPDATE events SET next_run = NULL WHERE id = ?`, id)
-		return nil
-	}
-	newID, err := c.AddFunc(cronExpr, func() {
-		sendTG(token, chatID, message)
-	})
-	if err != nil {
-		log.Println("bad cron:", id, err)
-		_, _ = db.Exec(`UPDATE events SET next_run = NULL WHERE id = ?`, id)
-		return err
-	}
-	next := c.Entry(newID).Next
-	_, _ = db.Exec(`UPDATE events SET next_run = ? WHERE id = ?`, next, id)
-	return nil
-}
-
-func loadJobs() {
-	rows, err := db.Query(`SELECT id,cron_expr,message,chat_id,tg_token,enabled FROM events`)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var e Event
-		if err := rows.Scan(&e.ID, &e.CronExpr, &e.Message, &e.ChatID, &e.TGToken, &e.Enabled); err != nil {
+func runScheduler() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		now := time.Now().UTC()
+		rows, err := db.Query(`SELECT id,message,chat_id,tg_token,enabled,trigger_days,first_triggered,next_run FROM events WHERE enabled=1 AND trigger_days>0 AND next_run IS NOT NULL AND next_run<=?`, now.Format(time.RFC3339))
+		if err != nil {
+			log.Println("scheduler query:", err)
 			continue
 		}
-		_ = addJobToCron(e.ID, e.CronExpr, e.Message, e.ChatID, e.TGToken, e.Enabled)
+		for rows.Next() {
+			var e Event
+			var ftStr, nextStr string
+			if err := rows.Scan(&e.ID, &e.Message, &e.ChatID, &e.TGToken, &e.Enabled, &e.TriggerDays, &ftStr, &nextStr); err != nil {
+				continue
+			}
+			var ft time.Time
+			if t, err := time.Parse(time.RFC3339, ftStr); err == nil {
+				ft = t
+			}
+			if ft.IsZero() {
+				ft = now
+				_, _ = db.Exec(`UPDATE events SET first_triggered=? WHERE id=?`, ft.Format(time.RFC3339), e.ID)
+			}
+			sendTG(e.TGToken, e.ChatID, e.Message)
+			newNext := now.Add(time.Duration(e.TriggerDays) * 24 * time.Hour)
+			_, _ = db.Exec(`UPDATE events SET next_run=? WHERE id=?`, newNext.Format(time.RFC3339), e.ID)
+		}
+		rows.Close()
 	}
 }
 
@@ -182,9 +176,7 @@ func env(k, def string) string {
 
 func main() {
 	db = mustDB()
-	c = cron.New(cron.WithSeconds())
-	loadJobs()
-	c.Start()
+	go runScheduler()
 
 	http.HandleFunc("/api/events", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
