@@ -49,6 +49,12 @@ func mustDB() *sql.DB {
 	}
 	_, _ = d.Exec(`ALTER TABLE events ADD COLUMN trigger_days INTEGER NOT NULL DEFAULT 0`)
 	_, _ = d.Exec(`ALTER TABLE events ADD COLUMN first_triggered DATETIME`)
+	if _, err := d.Exec(`CREATE TABLE IF NOT EXISTS settings (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL
+	)`); err != nil {
+		log.Fatal(err)
+	}
 	return d
 }
 
@@ -109,6 +115,47 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(e)
 }
 
+func updateHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/events/")
+	idStr = strings.TrimSuffix(idStr, "/")
+	if idStr == "" {
+		http.Error(w, "missing id", 400)
+		return
+	}
+	var e Event
+	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	if e.TriggerDays < 0 {
+		e.TriggerDays = 0
+	}
+	_, _ = db.Exec(`UPDATE events SET name=?,message=?,chat_id=?,tg_token=?,enabled=?,trigger_days=? WHERE id=?`,
+		e.Name, e.Message, e.ChatID, e.TGToken, b2i(e.Enabled), e.TriggerDays, idStr)
+	if e.TriggerDays > 0 && e.Enabled {
+		next := time.Now().UTC().Add(time.Duration(e.TriggerDays) * 24 * time.Hour)
+		_, _ = db.Exec(`UPDATE events SET next_run=? WHERE id=?`, next, idStr)
+	} else {
+		_, _ = db.Exec(`UPDATE events SET next_run=NULL WHERE id=?`, idStr)
+	}
+	w.WriteHeader(204)
+}
+
+func toggleHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/events/")
+	idStr = strings.TrimSuffix(idStr, "/toggle")
+	if idStr == "" {
+		http.Error(w, "missing id", 400)
+		return
+	}
+	if r.Method != http.MethodPatch && r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	_, _ = db.Exec(`UPDATE events SET enabled = NOT enabled WHERE id = ?`, idStr)
+	w.WriteHeader(204)
+}
+
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/events/")
 	idStr = strings.TrimSuffix(idStr, "/")
@@ -117,6 +164,25 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, _ = db.Exec(`UPDATE events SET enabled=0, next_run=NULL WHERE id = ?`, idStr)
+	w.WriteHeader(204)
+}
+
+func settingsGetHandler(w http.ResponseWriter, r *http.Request) {
+	row := db.QueryRow(`SELECT value FROM settings WHERE key='background_url'`)
+	var v string
+	_ = row.Scan(&v)
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"background_url": v})
+}
+
+func settingsPutHandler(w http.ResponseWriter, r *http.Request) {
+	var body map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	u := strings.TrimSpace(body["background_url"])
+	_, _ = db.Exec(`INSERT INTO settings(key,value) VALUES('background_url',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`, u)
 	w.WriteHeader(204)
 }
 
@@ -188,14 +254,34 @@ func main() {
 			http.Error(w, "method not allowed", 405)
 		}
 	})
-	http.HandleFunc("/api/events/", func(w http.ResponseWriter, r *http.Request) {
+
+	http.HandleFunc("/api/settings/background", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
+		case http.MethodGet:
+			settingsGetHandler(w, r)
+		case http.MethodPut:
+			settingsPutHandler(w, r)
+		default:
+			http.Error(w, "method not allowed", 405)
+		}
+	})
+
+	http.HandleFunc("/api/events/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if strings.HasSuffix(path, "/toggle") {
+			toggleHandler(w, r)
+			return
+		}
+		switch r.Method {
+		case http.MethodPut:
+			updateHandler(w, r)
 		case http.MethodDelete:
 			deleteHandler(w, r)
 		default:
 			http.Error(w, "method not allowed", 405)
 		}
 	})
+
 	http.Handle("/", http.FileServer(http.Dir("./frontend/dist")))
 	port := env("PORT", "8080")
 	log.Println("listen :" + port)
