@@ -163,7 +163,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing id", 400)
 		return
 	}
-	_, _ = db.Exec(`UPDATE events SET enabled=0, next_run=NULL WHERE id = ?`, idStr)
+	_, _ = db.Exec(`DELETE FROM events WHERE id = ?`, idStr)
 	w.WriteHeader(204)
 }
 
