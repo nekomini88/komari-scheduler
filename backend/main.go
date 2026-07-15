@@ -86,6 +86,9 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, e)
 	}
+	if out == nil {
+		out = []Event{}
+	}
 	w.Header().Set("content-type", "application/json")
 	json.NewEncoder(w).Encode(out)
 }
