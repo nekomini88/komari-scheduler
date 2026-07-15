@@ -172,10 +172,16 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 
 func settingsGetHandler(w http.ResponseWriter, r *http.Request) {
 	row := db.QueryRow(`SELECT value FROM settings WHERE key='background_url'`)
-	var v string
-	_ = row.Scan(&v)
+	var url string
+	_ = row.Scan(&url)
+	row2 := db.QueryRow(`SELECT value FROM settings WHERE key='background_mode'`)
+	var mode string
+	_ = row2.Scan(&mode)
+	if mode == "" {
+		mode = "cover"
+	}
 	w.Header().Set("content-type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"background_url": v})
+	json.NewEncoder(w).Encode(map[string]string{"background_url": url, "background_mode": mode})
 }
 
 func settingsPutHandler(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +191,15 @@ func settingsPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u := strings.TrimSpace(body["background_url"])
+	m := strings.TrimSpace(body["background_mode"])
+	if m == "" {
+		m = "cover"
+	}
+	if m != "cover" && m != "stretch" && m != "auto" {
+		m = "cover"
+	}
 	_, _ = db.Exec(`INSERT INTO settings(key,value) VALUES('background_url',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`, u)
+	_, _ = db.Exec(`INSERT INTO settings(key,value) VALUES('background_mode',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`, m)
 	w.WriteHeader(204)
 }
 
