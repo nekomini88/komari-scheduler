@@ -5,23 +5,166 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Komari Scheduler</title>
 <style>
-:root{color-scheme:light dark}
+:root{
+  --el-color-primary:#409EFF;
+  --el-color-success:#67C23A;
+  --el-color-warning:#E6A23C;
+  --el-color-danger:#F56C6C;
+  --el-color-info:#909399;
+  --el-bg-color:#f5f7fa;
+  --el-text-color-primary:#303133;
+  --el-text-color-regular:#606266;
+  --el-border-color:#dcdfe6;
+  --el-border-color-light:#e4e7ed;
+  --el-border-radius-base:8px;
+  --el-box-shadow:0 2px 12px 0 rgba(0,0,0,.06);
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,'Noto Sans SC',sans-serif;background:linear-gradient(135deg,#f5f7fa,#c3cfe2);color:#1f2937;background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed}
-.app{padding:32px;max-width:1100px;margin:0 auto}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-h1{font-size:24px;margin:0}
-.card{background:rgba(255,255,255,.85);backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,.6);border-radius:18px;padding:18px;box-shadow:0 6px 22px rgba(0,0,0,.08)}
-form{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
-input,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;background:#fff}
-button{padding:10px 14px;border:none;border-radius:12px;background:#2d6a4f;color:#fff;cursor:pointer}
-button.secondary{background:#6b7280}
-button.danger{background:#dc2626}
-table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
-.go{background:#d1fae5;color:#065f46;padding:4px 8px;border-radius:999px;font-size:12px}
-.stop{background:#fee2e2;color:#991b1b;padding:4px 8px;border-radius:999px;font-size:12px}
-.muted{color:#6b7280}
+body{
+  margin:0;
+  font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  color:var(--el-text-color-primary);
+  background:var(--el-bg-color);
+  min-height:100vh;
+}
+.app{
+  max-width:1100px;
+  margin:0 auto;
+  padding:24px 16px 48px;
+}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+header h1{
+  font-size:22px;
+  font-weight:600;
+  margin:0;
+  color:var(--el-text-color-primary);
+}
+.page-card{
+  background:#fff;
+  border:1px solid var(--el-border-color);
+  border-radius:var(--el-border-radius-base);
+  padding:22px 24px;
+  box-shadow:var(--el-box-shadow);
+  margin-bottom:20px;
+}
+.form-title{
+  font-size:16px;
+  font-weight:600;
+  color:var(--el-text-color-primary);
+  margin:0 0 16px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--el-border-color-light);
+}
+#status{
+  font-size:13px;
+  color:var(--el-text-color-regular);
+  margin-bottom:8px;
+  min-height:18px;
+}
+form{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+input,textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:var(--el-border-radius-base);
+  border:1px solid var(--el-border-color);
+  background:#fff;
+  color:var(--el-text-color-primary);
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  font-size:14px;
+}
+input:focus,textarea:focus{
+  border-color:var(--el-color-primary);
+  box-shadow:0 0 0 3px rgba(64,158,255,.12);
+}
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:var(--el-border-radius-base);
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
+  transition:background .2s, transform .05s;
+}
+button:active{transform:translateY(1px)}
+.el-button--primary{background:var(--el-color-primary)}
+.el-button--primary:hover{background:#66b1ff}
+.el-button--success{background:var(--el-color-success)}
+.el-button--success:hover{background:#85ce61}
+.el-button--danger{background:var(--el-color-danger)}
+.el-button--danger:hover{background:#f78989}
+.el-button--info{background:#fff;color:var(--el-text-color-regular);border:1px solid var(--el-border-color)}
+.el-button--info:hover{color:var(--el-color-primary);border-color:var(--el-color-primary)}
+.el-button--warning{background:var(--el-color-warning)}
+.el-button--warning:hover{background:#eebe77}
+.el-button--text{background:transparent;color:var(--el-color-primary);padding:6px 8px;min-height:auto}
+.el-button--text:hover{color:#66b1ff}
+.el-button+.el-button{margin-left:8px}
+
+.table-card table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+  font-size:14px;
+  border-top:1px solid var(--el-border-color-light);
+}
+th,td{
+  text-align:left;
+  padding:12px 10px;
+  border-bottom:1px solid var(--el-border-color-light);
+  color:var(--el-text-color-regular);
+}
+th{
+  color:var(--el-text-color-primary);
+  font-weight:600;
+  background:#fafafa;
+}
+tbody tr:hover{background:#f5f7fa}
+tbody tr:last-child td{border-bottom:none}
+.el-tag{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  line-height:1.2;
+}
+.el-tag--success{background:#f0f9eb;color:#67c23a}
+.el-tag--danger{background:#fef0f0;color:#f56c6c}
+.el-tag--info{background:#f4f4f5;color:#909399}
+
+.muted{color:var(--el-text-color-regular)}
+
+.settings-mask{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.3);
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+.settings-mask.open{display:flex}
+.settings-card{
+  background:#fff;
+  border:1px dashed var(--el-border-color);
+  border-radius:var(--el-border-radius-base);
+  padding:22px 24px;
+  width:92%;
+  max-width:520px;
+  box-shadow:var(--el-box-shadow);
+}
+.settings-card h3{margin:0 0 16px;font-size:16px;font-weight:600}
+.settings-card input{
+  width:100%;
+  margin-bottom:14px;
+}
+.settings-actions{display:flex;gap:10px;justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -29,12 +172,15 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
   <header>
     <h1>🗓️ 事件定时推送</h1>
     <div>
-      <button onclick="openSettings()">⚙️ 设置</button>
-      <button onclick="document.getElementById('event-form').scrollIntoView({behavior:'smooth'})">+ 新建事件</button>
+      <button class="el-button--info" onclick="openSettings()">⚙️ 自定义背景</button>
+      <button class="el-button--primary" onclick="document.getElementById('event-form').scrollIntoView({behavior:'smooth'})">+ 新建事件</button>
     </div>
   </header>
-  <div id="status" class="muted" style="margin-bottom:8px"></div>
-  <section class="card">
+
+  <div id="status" class="muted"></div>
+
+  <div class="page-card">
+    <div class="form-title">事件表单</div>
     <form id="event-form" onsubmit="return submitForm(event)">
       <input id="id" type="hidden" />
       <input id="name" required placeholder="事件名称" />
@@ -42,39 +188,68 @@ th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
       <input id="chat_id" required placeholder="TG chat_id，如 -1001234567890" />
       <input id="tg_token" required placeholder="TG BOT_TOKEN" />
       <input id="trigger_days" type="number" min="0" placeholder="自定义天数" />
-      <button type="submit">保存</button>
-      <button type="button" class="secondary" onclick="resetForm()">重置</button>
+      <div style="grid-column:1/-1;display:flex;gap:10px">
+        <button type="submit" id="save-btn" class="el-button--success">保存</button>
+        <button type="button" class="el-button--info" onclick="resetForm()">重置</button>
+      </div>
     </form>
-  </section>
-  <section class="card" style="margin-top:16px">
-    <h3>事件列表</h3>
+  </div>
+
+  <div class="page-card">
+    <div class="form-title">事件列表</div>
     <table>
-      <thead><tr><th>#</th><th>名称</th><th>消息</th><th>ChatID</th><th>自定义天数</th><th>下次</th><th>状态</th><th>操作</th></tr></thead>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>名称</th>
+          <th>消息</th>
+          <th>ChatID</th>
+          <th>自定义天数</th>
+          <th>下次</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
       <tbody id="list"></tbody>
     </table>
-  </section>
+  </div>
 </div>
 
-<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);align-items:center;justify-content:center">
-  <div class="card" style="max-width:520px;width:90%">
+<div id="settings-modal" class="settings-mask">
+  <div class="settings-card">
     <h3>⚙️ 自定义背景</h3>
     <input id="bg_url" placeholder="输入图片 URL，留空恢复默认" />
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <button onclick="saveSettings()">保存</button>
-      <button class="secondary" onclick="document.getElementById('settings-modal').style.display='none'">关闭</button>
+    <div class="settings-actions">
+      <button class="el-button--info" onclick="document.getElementById('settings-modal').classList.remove('open')">关闭</button>
+      <button onclick="saveSettings()" class="el-button--primary">保存</button>
     </div>
   </div>
 </div>
 
 <script>
 const statusEl=document.getElementById('status');
-function showStatus(msg,type){statusEl.textContent=msg;statusEl.style.color=type==='error'?'#b91c1c':type==='ok'?'#047857':'#4b5563';}
-function resetForm(){document.getElementById('event-form').reset();document.getElementById('id').value='';document.querySelector('#event-form button[type=submit]').textContent='保存';showStatus('','');}
+function showStatus(msg,type){
+  statusEl.textContent=msg;
+  statusEl.style.color=type==='error'?'var(--el-color-danger)':type==='ok'?'var(--el-color-success)':'var(--el-text-color-regular)';
+}
+function resetForm(){
+  document.getElementById('event-form').reset();
+  document.getElementById('id').value='';
+  const btn=document.getElementById('save-btn');
+  if(btn) btn.textContent='保存';
+  showStatus('','');
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');}
+function escapeAttr(s){return escapeHtml(s).replace(/"/g,'&quot;');}
+
 async function load(){
   const res=await fetch('/api/events');
   const rows=await res.json();
   const tbody=document.getElementById('list');
-  if(!Array.isArray(rows)||rows.length===0){tbody.innerHTML='<tr><td colspan="8" class="muted">暂无事件</td></tr>';return;}
+  if(!Array.isArray(rows)||rows.length===0){
+    tbody.innerHTML='<tr><td colspan="8" class="muted" style="text-align:center">暂无事件</td></tr>';
+    return;
+  }
   tbody.innerHTML=rows.map(r=>`<tr data-id="${r.id}">
     <td>${r.id}</td>
     <td>${escapeHtml(r.name)}</td>
@@ -82,17 +257,14 @@ async function load(){
     <td>${escapeHtml(r.chat_id)}</td>
     <td>${r.trigger_days}天</td>
     <td>${r.next_run?new Date(r.next_run).toLocaleString():'-'}</td>
-    <td><span class="${r.enabled?'go':'stop'}">${r.enabled?'启用':'停用'}</span></td>
+    <td><span class="el-tag ${r.enabled?'el-tag--success':'el-tag--danger'}">${r.enabled?'启用':'停用'}</span></td>
     <td>
-      <button class="edit" data-id="${r.id}" data-name="${escapeAttr(r.name)}" data-message="${escapeAttr(r.message)}" data-chat="${escapeAttr(r.chat_id)}" data-token="${escapeAttr(r.tg_token)}" data-days="${r.trigger_days}">编辑</button>
-      <button class="toggle" data-id="${r.id}">${r.enabled?'停用':'启用'}</button>
-      <button class="danger del" data-id="${r.id}">删除</button>
+      <button class="el-button--primary el-button--text edit" data-id="${r.id}" data-name="${escapeAttr(r.name)}" data-message="${escapeAttr(r.message)}" data-chat="${escapeAttr(r.chat_id)}" data-token="${escapeAttr(r.tg_token)}" data-days="${r.trigger_days}">编辑</button>
+      <button class="el-button--warning el-button--text toggle" data-id="${r.id}">${r.enabled?'停用':'启用'}</button>
+      <button class="el-button--danger el-button--text del" data-id="${r.id}">删除</button>
     </td>
   </tr>`).join('');
 }
-
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');}
-function escapeAttr(s){return escapeHtml(s).replace(/"/g,'&quot;');}
 
 document.getElementById('list').addEventListener('click', async e => {
   const target = e.target;
@@ -101,16 +273,16 @@ document.getElementById('list').addEventListener('click', async e => {
 
   if (target.classList.contains('del')) {
     if (!confirm('确定删除？')) return;
-    await fetch('/api/events/' + id, {method: 'DELETE'});
-    showStatus('已删除','ok');
+    const r=await fetch('/api/events/' + id, {method: 'DELETE'});
+    showStatus(r.status===204?'已删除':'删除失败','ok');
     load();
     return;
   }
 
   if (target.classList.contains('toggle')) {
     if (!confirm('确定切换启用/停用？')) return;
-    await fetch('/api/events/' + id + '/toggle', {method: 'POST'});
-    showStatus('状态已切换','ok');
+    const r=await fetch('/api/events/' + id + '/toggle', {method: 'POST'});
+    showStatus(r.status===204?'状态已切换':'切换失败','ok');
     load();
     return;
   }
@@ -122,7 +294,7 @@ document.getElementById('list').addEventListener('click', async e => {
     document.getElementById('chat_id').value = target.getAttribute('data-chat') || '';
     document.getElementById('tg_token').value = target.getAttribute('data-token') || '';
     document.getElementById('trigger_days').value = target.getAttribute('data-days') || '0';
-    document.querySelector('#event-form button[type=submit]').textContent='更新';
+    document.getElementById('save-btn').textContent='更新';
     document.getElementById('event-form').scrollIntoView({behavior:'smooth'});
   }
 });
@@ -151,8 +323,14 @@ async function submitForm(e){
   }catch(err){showStatus('保存失败: ' + err.message,'error');}
   return false;
 }
-async function openSettings(){const res=await fetch('/api/settings/background');const data=await res.json();document.getElementById('bg_url').value=data.background_url||'';document.getElementById('settings-modal').style.display='flex';}
-async function saveSettings(){const url=document.getElementById('bg_url').value.trim();await fetch('/api/settings/background',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({background_url:url})});applyBackground(url);document.getElementById('settings-modal').style.display='none';}
+function openSettings(){document.getElementById('settings-modal').classList.add('open');}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+async function saveSettings(){
+  const url=document.getElementById('bg_url').value.trim();
+  await fetch('/api/settings/background',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({background_url:url})});
+  applyBackground(url);
+  closeSettings();
+}
 function applyBackground(url){if(url){document.body.style.backgroundImage='url('+url+')';}else{document.body.style.backgroundImage='';}}
 load();
 </script>
