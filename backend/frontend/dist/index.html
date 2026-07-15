@@ -219,6 +219,11 @@ tbody tr:last-child td{border-bottom:none}
   <div class="settings-card">
     <h3>⚙️ 自定义背景</h3>
     <input id="bg_url" placeholder="输入图片 URL，留空恢复默认" />
+    <select id="bg_mode" style="width:100%;padding:10px 12px;border-radius:var(--el-border-radius-base);border:1px solid var(--el-border-color);background:#fff;color:var(--el-text-color-primary);font-size:14px;margin-bottom:14px">
+      <option value="cover">扩展（填满背景，不变形）</option>
+      <option value="stretch">拉伸（铺满，可能变形）</option>
+      <option value="auto">原始大小（居中，不裁剪）</option>
+    </select>
     <div class="settings-actions">
       <button class="el-button--info" onclick="document.getElementById('settings-modal').classList.remove('open')">关闭</button>
       <button onclick="saveSettings()" class="el-button--primary">保存</button>
@@ -331,7 +336,35 @@ async function saveSettings(){
   applyBackground(url);
   closeSettings();
 }
-function applyBackground(url){if(url){document.body.style.backgroundImage='url('+url+')';}else{document.body.style.backgroundImage='';}}
+let bgMode='';
+async function loadSettings(){
+  const res=await fetch('/api/settings/background');
+  const data=await res.json();
+  applyBackground(data.background_url||'', data.background_mode||'cover');
+  bgMode=data.background_mode||'cover';
+  const sel=document.getElementById('bg_mode');
+  if(sel) sel.value=bgMode;
+}
+function applyBackground(url,mode){
+  if(!mode) mode='cover';
+  if(url){
+    document.body.style.backgroundImage='url('+url+')';
+    if(mode==='cover'){document.body.style.backgroundSize='cover';document.body.style.backgroundPosition='center';document.body.style.backgroundRepeat='no-repeat';}
+    else if(mode==='stretch'){document.body.style.backgroundSize='100% 100%';document.body.style.backgroundPosition='center';document.body.style.backgroundRepeat='no-repeat';}
+    else{document.body.style.backgroundSize='auto';document.body.style.backgroundPosition='center';document.body.style.backgroundRepeat='repeat';}
+  }else{
+    document.body.style.backgroundImage='';document.body.style.backgroundSize='';document.body.style.backgroundPosition='';document.body.style.backgroundRepeat='';
+  }
+}
+async function saveSettings(){
+  const url=document.getElementById('bg_url').value.trim();
+  const mode=document.getElementById('bg_mode').value||'cover';
+  bgMode=mode;
+  await fetch('/api/settings/background',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({background_url:url,background_mode:mode})});
+  applyBackground(url,mode);
+  closeSettings();
+}
+loadSettings();
 load();
 </script>
 </body>
