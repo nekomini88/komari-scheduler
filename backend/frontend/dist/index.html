@@ -5,175 +5,348 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Komari Scheduler</title>
 <style>
-:root{
-  --el-color-primary:#409EFF;
-  --el-color-success:#67C23A;
-  --el-color-warning:#E6A23C;
-  --el-color-danger:#F56C6C;
-  --el-color-info:#909399;
-  --el-bg-color:#f5f7fa;
-  --el-text-color-primary:#303133;
-  --el-text-color-regular:#606266;
-  --el-border-color:#dcdfe6;
-  --el-border-color-light:#e4e7ed;
-  --el-border-radius-base:8px;
-  --el-box-shadow:0 2px 12px 0 rgba(0,0,0,.06);
+/* ========== komari-theme-emerald 设计令牌（与主站一致）========== */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.696 0.17 162.48);
+  --success-foreground: oklch(0.985 0 0);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --radius: 0.625rem;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --emerald: #10b981;
+  --emerald-soft: rgba(16, 185, 129, 0.08);
 }
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:"Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
-  color:var(--el-text-color-primary);
-  background:var(--el-bg-color);
-  min-height:100vh;
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.74 0.17 162);
+  --success-foreground: oklch(0.141 0.005 285.823);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --emerald-soft: rgba(52, 211, 153, 0.1);
 }
-.app{
-  max-width:1100px;
-  margin:0 auto;
-  padding:24px 16px 48px;
+* { box-sizing: border-box; border-color: var(--border); }
+html { font-family: var(--font-sans); }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  transition: background-color .3s, color .3s;
+  position: relative;
 }
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:20px;
+/* 顶部渐变光晕（克隆自主站 Background.vue） */
+.hero-glow {
+  position: fixed;
+  top: 0; left: 50%;
+  width: 1300px; height: 400px;
+  margin-left: -650px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(90deg, var(--emerald), #bef264);
+  -webkit-mask-image: radial-gradient(farthest-side at top, white, transparent);
+  mask-image: radial-gradient(farthest-side at top, white, transparent);
+  opacity: .4;
 }
-header h1{
-  font-size:22px;
-  font-weight:600;
-  margin:0;
-  color:var(--el-text-color-primary);
+.dark .hero-glow {
+  background: linear-gradient(90deg, rgba(16,185,129,.3), rgba(190,242,100,.3));
+  opacity: 1;
 }
-.page-card{
-  background:#fff;
-  border:1px solid var(--el-border-color);
-  border-radius:var(--el-border-radius-base);
-  padding:22px 24px;
-  box-shadow:var(--el-box-shadow);
-  margin-bottom:20px;
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  position: relative;
+  z-index: 1;
 }
-.form-title{
-  font-size:16px;
-  font-weight:600;
-  color:var(--el-text-color-primary);
-  margin:0 0 16px;
-  padding-bottom:12px;
-  border-bottom:1px solid var(--el-border-color-light);
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-#status{
-  font-size:13px;
-  color:var(--el-text-color-regular);
-  margin-bottom:8px;
-  min-height:18px;
+header h1 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -.02em; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--emerald-soft);
+  border-radius: 50%;
+  font-size: 20px;
 }
-form{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
-input,textarea{
-  width:100%;
-  padding:10px 12px;
-  border-radius:var(--el-border-radius-base);
-  border:1px solid var(--el-border-color);
-  background:#fff;
-  color:var(--el-text-color-primary);
-  outline:none;
-  transition:border-color .2s,box-shadow .2s;
-  font-size:14px;
+/* 卡片：纯白 + 浅灰细边框 + 圆角（shadcn 风格） */
+.page-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 24px;
 }
-input:focus,textarea:focus{
-  border-color:var(--el-color-primary);
-  box-shadow:0 0 0 3px rgba(64,158,255,.12);
+.form-title {
+  font-size: 16px; font-weight: 600;
+  margin: 0 0 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  color: var(--card-foreground);
 }
-button{
-  padding:10px 16px;
-  border:none;
-  border-radius:var(--el-border-radius-base);
-  color:#fff;
-  cursor:pointer;
-  font-size:14px;
-  transition:background .2s, transform .05s;
+#status { font-size: 13px; color: var(--muted-foreground); margin-bottom: 12px; min-height: 18px; }
+/* 表单 */
+form { display: grid; gap: 18px; grid-template-columns: repeat(2, 1fr); }
+label.fl { grid-column: 1/-1; display: block; }
+input, textarea, select {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--input);
+  background: var(--card);
+  color: var(--foreground);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  font-size: 14px;
+  font-family: inherit;
 }
-button:active{transform:translateY(1px)}
-.el-button--primary{background:var(--el-color-primary)}
-.el-button--primary:hover{background:#66b1ff}
-.el-button--success{background:var(--el-color-success)}
-.el-button--success:hover{background:#85ce61}
-.el-button--danger{background:var(--el-color-danger)}
-.el-button--danger:hover{background:#f78989}
-.el-button--info{background:#fff;color:var(--el-text-color-regular);border:1px solid var(--el-border-color)}
-.el-button--info:hover{color:var(--el-color-primary);border-color:var(--el-color-primary)}
-.el-button--warning{background:var(--el-color-warning)}
-.el-button--warning:hover{background:#eebe77}
-.el-button--text{background:transparent;color:var(--el-color-primary);padding:6px 8px;min-height:auto}
-.el-button--text:hover{color:#66b1ff}
-.el-button+.el-button{margin-left:8px}
-
-.table-card table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:8px;
-  font-size:14px;
-  border-top:1px solid var(--el-border-color-light);
+input:focus, textarea:focus, select:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--emerald-soft);
 }
-th,td{
-  text-align:left;
-  padding:12px 10px;
-  border-bottom:1px solid var(--el-border-color-light);
-  color:var(--el-text-color-regular);
+textarea { resize: vertical; min-height: 84px; }
+/* 按钮：线框 + 深色实心（shadcn 风格） */
+button {
+  padding: 9px 18px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  background: transparent;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
 }
-th{
-  color:var(--el-text-color-primary);
-  font-weight:600;
-  background:#fafafa;
+button:active { transform: translateY(1px); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
-tbody tr:hover{background:#f5f7fa}
-tbody tr:last-child td{border-bottom:none}
-.el-tag{
-  display:inline-flex;
-  align-items:center;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  line-height:1.2;
+.btn-primary:hover { opacity: .9; }
+.btn-outline {
+  border-color: var(--border);
+  background: var(--card);
+  color: var(--foreground);
 }
-.el-tag--success{background:#f0f9eb;color:#67c23a}
-.el-tag--danger{background:#fef0f0;color:#f56c6c}
-.el-tag--info{background:#f4f4f5;color:#909399}
-
-.muted{color:var(--el-text-color-regular)}
-
-.settings-mask{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.3);
-  align-items:center;
-  justify-content:center;
-  z-index:50;
+.btn-outline:hover { background: var(--accent); }
+.btn-destructive {
+  color: var(--destructive);
 }
-.settings-mask.open{display:flex}
-.settings-card{
-  background:#fff;
-  border:1px dashed var(--el-border-color);
-  border-radius:var(--el-border-radius-base);
-  padding:22px 24px;
-  width:92%;
-  max-width:520px;
-  box-shadow:var(--el-box-shadow);
+.btn-destructive:hover { background: color-mix(in srgb, var(--destructive) 10%, transparent); }
+.btn-warning { color: #d97706; border-color: rgba(217,119,6,.3); }
+.btn-warning:hover { background: rgba(217,119,6,.08); }
+.btn-text { color: var(--foreground); padding: 7px 10px; font-size: 13px; }
+.btn-text:hover { background: var(--accent); }
+button + button { margin-left: 8px; }
+/* 渠道选择 */
+.channel-group { display: flex; gap: 12px; grid-column: 1/-1; flex-wrap: wrap; }
+.channel-opt {
+  flex: 1; min-width: 200px; display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  background: var(--card);
 }
-.settings-card h3{margin:0 0 16px;font-size:16px;font-weight:600}
-.settings-card input{
-  width:100%;
-  margin-bottom:14px;
+.channel-opt:hover { border-color: var(--ring); }
+.channel-opt.active {
+  border-color: var(--emerald);
+  background: var(--emerald-soft);
+  box-shadow: 0 0 0 1px var(--emerald);
 }
-.settings-actions{display:flex;gap:10px;justify-content:flex-end}
+.channel-opt input[type=radio] { accent-color: var(--emerald); width: 16px; height: 16px; flex-shrink: 0; }
+.channel-opt .co-name { font-weight: 600; font-size: 14px; }
+.channel-opt .co-desc { font-size: 12px; color: var(--muted-foreground); }
+.channel-section {
+  grid-column: 1/-1;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 18px 20px;
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  background: var(--muted);
+}
+.channel-section.hidden { display: none; }
+.channel-section .sec-label {
+  grid-column: 1/-1;
+  font-size: 13px; font-weight: 600;
+  color: var(--emerald);
+  display: flex; align-items: center; gap: 6px; margin: 0;
+}
+.full { grid-column: 1/-1; }
+/* 表格：舒展的间距 + 主题色表头 */
+.table-card { overflow-x: auto; }
+.table-card table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+.table-card th, .table-card td {
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.table-card td.wrap { white-space: normal; }
+.table-card th {
+  color: var(--emerald);
+  font-weight: 600;
+  background: var(--emerald-soft);
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+.table-card th:first-child { border-top-left-radius: 8px; }
+.table-card th:last-child { border-top-right-radius: 8px; }
+.table-card tbody tr { transition: background .15s; }
+.table-card tbody tr:hover { background: var(--emerald-soft); }
+.table-card tbody tr:last-child td { border-bottom: none; }
+.table-card .col-id { width: 50px; }
+.table-card .col-name { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.table-card .col-msg { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.table-card .col-target { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.table-card .col-actions { text-align: right; }
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; line-height: 1.4;
+}
+.tag--success { background: var(--emerald-soft); color: var(--emerald); }
+.tag--danger { background: color-mix(in srgb, var(--destructive) 10%, transparent); color: var(--destructive); }
+.ch-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+}
+.ch-tg { background: rgba(56,161,255,.12); color: #2f80ed; }
+.ch-email { background: rgba(236,72,153,.12); color: #db2777; }
+.ch-both { background: var(--emerald-soft); color: var(--emerald); }
+.muted { color: var(--muted-foreground); }
+/* 设置弹窗 */
+.settings-mask {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4);
+  align-items: center; justify-content: center;
+  z-index: 50;
+}
+.settings-mask.open { display: flex; }
+.settings-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 92%; max-width: 520px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.12);
+}
+.settings-card h3 { margin: 0 0 16px; font-size: 16px; font-weight: 600; }
+.settings-card input, .settings-card select { margin-bottom: 14px; }
+.settings-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.test-result { margin-top: 10px; font-size: 13px; line-height: 1.8; }
+.test-result .ok { color: var(--success); }
+.test-result .fail { color: var(--destructive); }
+/* footer（与主站 Footer.vue 一致） */
+footer {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap;
+  align-items: center; justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+footer .fl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+footer .fr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+footer a { color: var(--foreground); font-weight: 600; text-decoration: none; transition: opacity .2s; }
+footer a:hover { opacity: .8; }
+/* 访客信息 pill（克隆自主站 VisitorInfoCard） */
+.visitor-wrap { position: fixed; inset-inline: 0; bottom: 10px; z-index: 30; display: flex; justify-content: center; pointer-events: none; }
+.visitor-pill {
+  pointer-events: auto; cursor: default;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: -1px -1px 0 var(--card), 0 0 16px rgba(0,0,0,.05);
+  transition: border-radius .3s cubic-bezier(.22,1,.36,1), transform .3s cubic-bezier(.22,1,.36,1), background-color .3s, box-shadow .3s;
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 12px;
+}
+.visitor-pill.collapsed { border-radius: 12px; }
+.visitor-pill.expanded { border-radius: 10px; transform: translateY(-4px); box-shadow: -1px -1px 0 var(--card), 0 10px 28px rgba(0,0,0,.08); }
+.v-row { display: flex; align-items: center; gap: 4px; min-width: 0; border-radius: 999px; transition: transform .3s cubic-bezier(.22,1,.36,1); }
+.v-row .v-ic {
+  width: 16px; height: 16px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  background: var(--emerald-soft);
+  color: var(--emerald);
+  padding: 2px;
+}
+.v-row svg.v-ic { width: 14px; height: 14px; }
+.v-row img.v-ic { object-fit: cover; border-radius: 0; background: none; padding: 0; }
+.v-row .v-tx { font-size: 12px; font-weight: 500; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; transition: opacity .22s, transform .22s; }
+.v-row.hidden-row { display: none; }
+.visitor-pill.expanded .v-tx { color: var(--foreground); }
+.visitor-pill.expanded .v-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: start; }
+.visitor-pill.expanded .v-line { display: flex; align-items: center; gap: 5px; }
+.visitor-pill:active { transform: scale(.97); }
+@media (max-width: 640px) {
+  form, .channel-section { grid-template-columns: 1fr; }
+  header h1 { font-size: 19px; }
+  .v-row .v-tx { max-width: 90px; }
+  .visitor-pill { padding: 5px 10px; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .visitor-pill, .v-row { transition: none; }
+}
 </style>
 </head>
 <body>
+<div class="hero-glow"></div>
 <div class="app">
   <header>
-    <h1>🗓️ 事件定时推送</h1>
+    <div class="brand">
+      <div class="brand-icon">🗓️</div>
+      <h1>事件定时推送</h1>
+    </div>
     <div>
-      <button class="el-button--info" onclick="openSettings()">⚙️ 自定义背景</button>
-      <button class="el-button--primary" onclick="document.getElementById('event-form').scrollIntoView({behavior:'smooth'})">+ 新建事件</button>
+      <button class="btn-outline" onclick="openSettings()">⚙️ 自定义背景</button>
+      <button class="btn-primary" onclick="document.getElementById('event-form').scrollIntoView({behavior:'smooth'})">+ 新建事件</button>
     </div>
   </header>
 
@@ -183,35 +356,98 @@ tbody tr:last-child td{border-bottom:none}
     <div class="form-title">事件表单</div>
     <form id="event-form" onsubmit="return submitForm(event)">
       <input id="id" type="hidden" />
-      <input id="name" required placeholder="事件名称" />
-      <input id="message" required rows="3" placeholder="推送内容" />
-      <input id="chat_id" required placeholder="TG chat_id，如 -1001234567890" />
-      <input id="tg_token" required placeholder="TG BOT_TOKEN" />
-      <input id="trigger_days" type="number" min="0" placeholder="自定义天数" />
-      <div style="grid-column:1/-1;display:flex;gap:10px">
-        <button type="submit" id="save-btn" class="el-button--success">保存</button>
-        <button type="button" class="el-button--info" onclick="resetForm()">重置</button>
+      <input id="name" required placeholder="事件名称，如：服务器续费提醒" class="full" />
+      <textarea id="message" required placeholder="推送内容（支持 HTML 格式，TG 会渲染；邮箱为纯文本）" class="full"></textarea>
+
+      <div class="channel-group">
+        <label class="channel-opt active">
+          <input type="radio" name="channel" value="tg" checked onchange="onChannelChange()" />
+          <div>
+            <div class="co-name">📨 Telegram</div>
+            <div class="co-desc">通过 Bot 推送到 chat_id</div>
+          </div>
+        </label>
+        <label class="channel-opt">
+          <input type="radio" name="channel" value="email" onchange="onChannelChange()" />
+          <div>
+            <div class="co-name">📧 邮箱</div>
+            <div class="co-desc">通过 SMTP 发送邮件</div>
+          </div>
+        </label>
+        <label class="channel-opt">
+          <input type="radio" name="channel" value="both" onchange="onChannelChange()" />
+          <div>
+            <div class="co-name">📨 + 📧 双渠道</div>
+            <div class="co-desc">同时推送 TG 和邮箱</div>
+          </div>
+        </label>
+      </div>
+
+      <div id="tg-section" class="channel-section">
+        <p class="sec-label">📨 Telegram 配置</p>
+        <input id="chat_id" placeholder="TG chat_id，如 -1001234567890" />
+        <input id="tg_token" placeholder="TG BOT_TOKEN" />
+      </div>
+
+      <div id="email-section" class="channel-section hidden">
+        <p class="sec-label">📧 邮箱配置（SMTP 已内置：smtp.qq.com:465）</p>
+        <input id="email_to" placeholder="收件人邮箱，如 xx@example.com" />
+        <input id="email_subject" placeholder="邮件主题（留空默认：Nekomini 事件推送）" />
+      </div>
+
+      <input id="trigger_days" type="number" min="0" placeholder="触发间隔（天），0=不自动触发" class="full" />
+
+      <div class="full" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button type="submit" id="save-btn" class="btn-primary">保存</button>
+        <button type="button" class="btn-outline" onclick="resetForm()">重置</button>
+        <button type="button" class="btn-warning" onclick="testSend()">✉️ 测试发送</button>
+        <span id="test-result" class="test-result"></span>
       </div>
     </form>
   </div>
 
-  <div class="page-card" style="border-color:#e6a23c;border-width:2px">
+  <div class="page-card table-card">
     <div class="form-title">事件列表</div>
     <table>
       <thead>
         <tr>
-          <th>#</th>
+          <th class="col-id">#</th>
           <th>名称</th>
+          <th>渠道</th>
           <th>消息</th>
-          <th>ChatID</th>
-          <th>自定义天数</th>
+          <th>目标</th>
+          <th>间隔</th>
           <th>下次</th>
           <th>状态</th>
-          <th>操作</th>
+          <th class="col-actions">操作</th>
         </tr>
       </thead>
       <tbody id="list"></tbody>
     </table>
+  </div>
+
+  <footer>
+    <div class="fl">
+      <span>Powered by</span>
+      <a href="https://github.com/nekomini88" target="_blank" rel="noopener noreferrer">Nekomini</a>
+      <span>·</span>
+      <span>Theme by</span>
+      <a href="https://github.com/Tokinx/komari-theme-emerald" target="_blank" rel="noopener noreferrer">Komari Emerald</a>
+    </div>
+    <div class="fr">
+      <span>© 2026 Nekomini · 仅供个人使用</span>
+    </div>
+  </footer>
+</div>
+
+<div class="visitor-wrap" id="visitor-wrap">
+  <div class="visitor-pill collapsed" id="visitor-pill" title="点击展开详细信息">
+    <div class="v-row"><img class="v-ic" id="v-flag" alt="" style="display:none" /><svg class="v-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.972 11.291a9 9 0 1 0-8.322 9.686M3.6 9h16.8M3.6 15h8.9"/></svg><div class="v-tx" id="v-loc">定位中…</div></div>
+    <div class="v-row hidden-row"><svg class="v-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zm4 15h10m-8-4v4m6-4v4"/></svg><div class="v-tx" id="v-device">检测中</div></div>
+    <div class="v-row"><svg class="v-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/></svg><div class="v-tx" id="v-ip">获取中</div></div>
+    <div class="v-row"><svg class="v-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm4-2v4"/></svg><div class="v-tx" id="v-browser">检测中</div></div>
+    <div class="v-row hidden-row"><svg class="v-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18m6 0V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg><div class="v-tx" id="v-isp">获取中</div></div>
+    <div class="v-row hidden-row"><svg class="v-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m9 0l3 2m-3-7v5"/></svg><div class="v-tx" id="v-time"></div></div>
   </div>
 </div>
 
@@ -219,14 +455,14 @@ tbody tr:last-child td{border-bottom:none}
   <div class="settings-card">
     <h3>⚙️ 自定义背景</h3>
     <input id="bg_url" placeholder="输入图片 URL，留空恢复默认" />
-    <select id="bg_mode" style="width:100%;padding:10px 12px;border-radius:var(--el-border-radius-base);border:1px solid var(--el-border-color);background:#fff;color:var(--el-text-color-primary);font-size:14px;margin-bottom:14px">
+    <select id="bg_mode">
       <option value="cover">扩展（填满背景，不变形）</option>
       <option value="stretch">拉伸（铺满，可能变形）</option>
       <option value="auto">原始大小（居中，不裁剪）</option>
     </select>
     <div class="settings-actions">
-      <button class="el-button--info" onclick="document.getElementById('settings-modal').classList.remove('open')">关闭</button>
-      <button onclick="saveSettings()" class="el-button--primary">保存</button>
+      <button class="btn-outline" onclick="document.getElementById('settings-modal').classList.remove('open')">关闭</button>
+      <button onclick="saveSettings()" class="btn-primary">保存</button>
     </div>
   </div>
 </div>
@@ -235,38 +471,63 @@ tbody tr:last-child td{border-bottom:none}
 const statusEl=document.getElementById('status');
 function showStatus(msg,type){
   statusEl.textContent=msg;
-  statusEl.style.color=type==='error'?'var(--el-color-danger)':type==='ok'?'var(--el-color-success)':'var(--el-text-color-regular)';
+  statusEl.style.color=type==='error'?'var(--destructive)':type==='ok'?'var(--success)':'var(--muted-foreground)';
+}
+function getChannel(){
+  const r=document.querySelector('input[name=channel]:checked');
+  return r?r.value:'tg';
+}
+function onChannelChange(){
+  const ch=getChannel();
+  document.querySelectorAll('.channel-opt').forEach(o=>o.classList.remove('active'));
+  const checked=document.querySelector('input[name=channel]:checked');
+  if(checked) checked.closest('.channel-opt').classList.add('active');
+  document.getElementById('tg-section').classList.toggle('hidden', ch==='email');
+  document.getElementById('email-section').classList.toggle('hidden', ch==='tg');
 }
 function resetForm(){
   document.getElementById('event-form').reset();
   document.getElementById('id').value='';
   const btn=document.getElementById('save-btn');
   if(btn) btn.textContent='保存';
+  document.getElementById('test-result').textContent='';
+  onChannelChange();
   showStatus('','');
 }
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');}
 function escapeAttr(s){return escapeHtml(s).replace(/"/g,'&quot;');}
+function chLabel(ch){
+  if(ch==='email') return '<span class="ch-tag ch-email">📧 邮箱</span>';
+  if(ch==='both') return '<span class="ch-tag ch-both">📨+📧</span>';
+  return '<span class="ch-tag ch-tg">📨 TG</span>';
+}
+function targetLabel(r){
+  if(r.channel==='email') return escapeHtml(r.email_to||'-');
+  if(r.channel==='both') return 'TG:'+escapeHtml(r.chat_id||'-')+'<br>📧:'+escapeHtml(r.email_to||'-');
+  return escapeHtml(r.chat_id||'-');
+}
 
 async function load(){
   const res=await fetch('/api/events');
   const rows=await res.json();
   const tbody=document.getElementById('list');
   if(!Array.isArray(rows)||rows.length===0){
-    tbody.innerHTML='<tr><td colspan="8" class="muted" style="text-align:center">暂无事件</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" class="muted" style="text-align:center;padding:40px 24px">暂无事件 · 在上方表单创建第一个推送事件</td></tr>';
     return;
   }
   tbody.innerHTML=rows.map(r=>`<tr data-id="${r.id}">
     <td>${r.id}</td>
-    <td>${escapeHtml(r.name)}</td>
-    <td>${escapeHtml(r.message.slice(0,24))}${r.message.length>24?'…':''}</td>
-    <td>${escapeHtml(r.chat_id)}</td>
+    <td class="col-name" title="${escapeAttr(r.name)}">${escapeHtml(r.name)}</td>
+    <td>${chLabel(r.channel)}</td>
+    <td class="col-msg" title="${escapeAttr(r.message)}">${escapeHtml(r.message.slice(0,24))}${r.message.length>24?'…':''}</td>
+    <td class="col-target" title="${escapeAttr(r.chat_id)} ${escapeAttr(r.email_to)}">${targetLabel(r)}</td>
     <td>${r.trigger_days}天</td>
     <td>${r.next_run?new Date(r.next_run).toLocaleString():'-'}</td>
-    <td><span class="el-tag ${r.enabled?'el-tag--success':'el-tag--danger'}">${r.enabled?'启用':'停用'}</span></td>
-    <td>
-      <button class="el-button--primary el-button--text edit" data-id="${r.id}" data-name="${escapeAttr(r.name)}" data-message="${escapeAttr(r.message)}" data-chat="${escapeAttr(r.chat_id)}" data-token="${escapeAttr(r.tg_token)}" data-days="${r.trigger_days}">编辑</button>
-      <button class="el-button--warning el-button--text toggle" data-id="${r.id}">${r.enabled?'停用':'启用'}</button>
-      <button class="el-button--danger el-button--text del" data-id="${r.id}">删除</button>
+    <td><span class="tag ${r.enabled?'tag--success':'tag--danger'}">${r.enabled?'启用':'停用'}</span></td>
+    <td class="col-actions" style="white-space:nowrap">
+      <button class="btn-text edit" data-id="${r.id}" data-name="${escapeAttr(r.name)}" data-message="${escapeAttr(r.message)}" data-channel="${r.channel}" data-chat="${escapeAttr(r.chat_id)}" data-token="${escapeAttr(r.tg_token)}" data-email="${escapeAttr(r.email_to)}" data-subject="${escapeAttr(r.email_subject)}" data-days="${r.trigger_days}">编辑</button>
+      <button class="btn-text toggle" data-id="${r.id}">${r.enabled?'停用':'启用'}</button>
+      <button class="btn-text del" data-id="${r.id}" style="color:var(--destructive)">删除</button>
     </td>
   </tr>`).join('');
 }
@@ -296,25 +557,55 @@ document.getElementById('list').addEventListener('click', async e => {
     document.getElementById('id').value = id;
     document.getElementById('name').value = target.getAttribute('data-name') || '';
     document.getElementById('message').value = target.getAttribute('data-message') || '';
+    const ch=target.getAttribute('data-channel')||'tg';
+    const radio=document.querySelector('input[name=channel][value="'+ch+'"]');
+    if(radio) radio.checked=true;
     document.getElementById('chat_id').value = target.getAttribute('data-chat') || '';
     document.getElementById('tg_token').value = target.getAttribute('data-token') || '';
+    document.getElementById('email_to').value = target.getAttribute('data-email') || '';
+    document.getElementById('email_subject').value = target.getAttribute('data-subject') || '';
     document.getElementById('trigger_days').value = target.getAttribute('data-days') || '0';
+    onChannelChange();
     document.getElementById('save-btn').textContent='更新';
     document.getElementById('event-form').scrollIntoView({behavior:'smooth'});
   }
 });
 
-async function submitForm(e){
-  e.preventDefault();
-  const id=document.getElementById('id').value;
-  const body={
+function collectBody(){
+  return {
     name:document.getElementById('name').value,
     message:document.getElementById('message').value,
+    channel:getChannel(),
     chat_id:document.getElementById('chat_id').value,
     tg_token:document.getElementById('tg_token').value,
+    email_to:document.getElementById('email_to').value,
+    email_subject:document.getElementById('email_subject').value,
     trigger_days:parseInt(document.getElementById('trigger_days').value||'0',10)||0,
     enabled:true
   };
+}
+
+async function testSend(){
+  const body=collectBody();
+  const tr=document.getElementById('test-result');
+  tr.innerHTML='<span class="muted">发送中…</span>';
+  try{
+    const res=await fetch('/api/test-send',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(data.results && Array.isArray(data.results)){
+      tr.innerHTML=data.results.map(r=>r.startsWith('TG: ✅')||r.startsWith('邮箱: ✅')?'<span class="ok">'+r+'</span>':'<span class="fail">'+r+'</span>').join('<br>');
+    }else{
+      tr.innerHTML='<span class="fail">发送失败</span>';
+    }
+  }catch(err){
+    tr.innerHTML='<span class="fail">测试失败: '+err.message+'</span>';
+  }
+}
+
+async function submitForm(e){
+  e.preventDefault();
+  const id=document.getElementById('id').value;
+  const body=collectBody();
   try{
     const res=await fetch(id?('/api/events/'+id):'/api/events',{method:id?'PUT':'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
     if(res.ok||res.status===204){
@@ -332,8 +623,10 @@ function openSettings(){document.getElementById('settings-modal').classList.add(
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
 async function saveSettings(){
   const url=document.getElementById('bg_url').value.trim();
-  await fetch('/api/settings/background',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({background_url:url})});
-  applyBackground(url);
+  const mode=document.getElementById('bg_mode').value||'cover';
+  bgMode=mode;
+  await fetch('/api/settings/background',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({background_url:url,background_mode:mode})});
+  applyBackground(url,mode);
   closeSettings();
 }
 let bgMode='';
@@ -356,16 +649,109 @@ function applyBackground(url,mode){
     document.body.style.backgroundImage='';document.body.style.backgroundSize='';document.body.style.backgroundPosition='';document.body.style.backgroundRepeat='';
   }
 }
-async function saveSettings(){
-  const url=document.getElementById('bg_url').value.trim();
-  const mode=document.getElementById('bg_mode').value||'cover';
-  bgMode=mode;
-  await fetch('/api/settings/background',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({background_url:url,background_mode:mode})});
-  applyBackground(url,mode);
-  closeSettings();
-}
+onChannelChange();
 loadSettings();
 load();
+
+/* ===== 访客信息 pill（克隆自主站 VisitorInfoCard）===== */
+(function(){
+  const pill=document.getElementById('visitor-pill');
+  const flagEl=document.getElementById('v-flag');
+  const locEl=document.getElementById('v-loc');
+  const ipEl=document.getElementById('v-ip');
+  const browserEl=document.getElementById('v-browser');
+  const deviceEl=document.getElementById('v-device');
+  const ispEl=document.getElementById('v-isp');
+  const timeEl=document.getElementById('v-time');
+
+  const ua=navigator.userAgent;
+  let device='桌面设备';
+  if(/android/i.test(ua)) device='Android 手机';
+  else if(/iphone|ipod/i.test(ua)) device='iPhone';
+  else if(/ipad/i.test(ua)) device='iPad';
+  else if(/tablet/i.test(ua)) device='平板电脑';
+  let browser='未知浏览器';
+  if(/Edg\/(\d+)/i.test(ua)) browser='Edge';
+  else if(/OPR\/(\d+)/i.test(ua)) browser='Opera';
+  else if(/Chrome\/(\d+)/i.test(ua)&&!/Edg|OPR/i.test(ua)) browser='Chrome';
+  else if(/Firefox\/(\d+)/i.test(ua)) browser='Firefox';
+  else if(/Safari/i.test(ua)&&!/Chrome/i.test(ua)) browser='Safari';
+  deviceEl.textContent=device;
+  browserEl.textContent=browser;
+  timeEl.textContent=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
+
+  function maskIp(v){
+    if(!v) return v;
+    const seg=v.split('.');
+    if(seg.length===4&&seg.every(s=>/^\d+$/.test(s))){
+      const [a,b,c,d]=seg;
+      return [a,b,'*'.repeat(c.length),d].join('.');
+    }
+    if(v.includes(':')){
+      const p=v.split('::')[0];
+      const vis=p?p.split(':').filter(Boolean).slice(0,4):[];
+      return vis.length?vis.join(':')+'::*':'::*';
+    }
+    return v;
+  }
+
+  const loaders=[
+    async()=>{const d=await(await fetch('https://api.ip.sb/geoip',{signal:AbortSignal.timeout(4000)})).json();
+      if(!d.ip) throw 0;
+      return{ip:d.ip,isp:d.isp||d.organization||d.asn_organization||'未知运营商',loc:[d.country,d.city||d.region].filter(Boolean).join(' · ')||'未知位置',cc:d.country_code||''};},
+    async()=>{const d=await(await fetch('https://ipwho.is/',{signal:AbortSignal.timeout(4000)})).json();
+      if(d.success===false||!d.ip) throw 0;
+      return{ip:d.ip,isp:d.connection?.isp||d.connection?.org||'未知运营商',loc:[d.country,d.city||d.region].filter(Boolean).join(' · ')||'未知位置',cc:d.country_code||''};},
+    async()=>{const d=await(await fetch('https://api.ipapi.is/',{signal:AbortSignal.timeout(4000)})).json();
+      if(!d.ip) throw 0;
+      return{ip:d.ip,isp:d.asn?.org||d.company?.name||d.datacenter?.datacenter||d.asn?.descr||'未知运营商',loc:[d.location?.country||d.datacenter?.country,d.location?.city||d.location?.state||d.datacenter?.city||d.datacenter?.region].filter(Boolean).join(' · ')||'未知位置',cc:d.location?.country_code||d.asn?.country||d.datacenter?.country||''};},
+    async()=>{const d=await(await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(4000)})).json();
+      if(d.error||!d.ip) throw 0;
+      return{ip:d.ip,isp:d.org||'未知运营商',loc:[d.country_name,d.city||d.region].filter(Boolean).join(' · ')||'未知位置',cc:d.country_code||''};},
+    async()=>{const d=await(await fetch('https://api.vore.top/api/IPdata',{signal:AbortSignal.timeout(5000)})).json();
+      if(d.code!==0||!d.data?.ip) throw 0;
+      return{ip:d.data.ip,isp:d.data.isp||'未知运营商',loc:[d.data.country,d.data.city||d.data.province].filter(Boolean).join(' · ')||'未知位置',cc:d.data.countryCode||''};},
+  ];
+  (async()=>{
+    for(const load of loaders){
+      try{
+        const g=await load();
+        ipEl.textContent=maskIp(g.ip);
+        locEl.textContent=g.loc;
+        ispEl.textContent=g.isp;
+        if(g.cc){
+          flagEl.src='/flags/'+g.cc.toUpperCase()+'.svg';
+          flagEl.style.display='block';
+          flagEl.onerror=()=>{flagEl.style.display='none'};
+        }
+        return;
+      }catch(e){}
+    }
+    ipEl.textContent='暂无法获取';
+    ispEl.textContent='网络信息不可用';
+    locEl.textContent='网络访客';
+  })();
+
+  let expanded=false;
+  pill.addEventListener('click',()=>{
+    expanded=!expanded;
+    pill.classList.toggle('expanded',expanded);
+    pill.classList.toggle('collapsed',!expanded);
+    document.querySelectorAll('.v-row.hidden-row').forEach(r=>{
+      r.style.display=expanded?'flex':'none';
+    });
+    pill.title=expanded?'点击收起':'点击展开详细信息';
+  });
+  document.querySelectorAll('.v-row.hidden-row').forEach(r=>{r.style.display='none'});
+})();
+
+/* 深色模式跟随系统 */
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  document.documentElement.classList.toggle('dark', e.matches);
+});
 </script>
 </body>
 </html>
